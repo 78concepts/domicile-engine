@@ -1,4 +1,4 @@
-package com.concepts78.domicileengine.handlers;
+package com.concepts78.domicile.engine.handlers;
 
 import org.springframework.messaging.Message;
 

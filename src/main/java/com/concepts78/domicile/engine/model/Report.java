@@ -1,4 +1,4 @@
-package com.concepts78.domicileengine.model;
+package com.concepts78.domicile.engine.model;
 
 import java.util.Date;
 import java.util.UUID;

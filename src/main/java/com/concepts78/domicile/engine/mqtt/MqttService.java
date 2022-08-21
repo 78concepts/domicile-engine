@@ -1,4 +1,4 @@
-package com.concepts78.domicileengine.mqtt;
+package com.concepts78.domicile.engine.mqtt;
 
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.springframework.integration.mqtt.core.DefaultMqttPahoClientFactory;

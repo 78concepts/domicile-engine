@@ -1,9 +1,8 @@
-package com.concepts78.domicileengine;
+package com.concepts78.domicile.engine;
 
-import com.concepts78.domicileengine.handlers.DeviceMessageHandler;
-import com.concepts78.domicileengine.handlers.MessageHandler;
-import com.concepts78.domicileengine.handlers.MessageHandlerBuilder;
-import com.concepts78.domicileengine.mqtt.MqttService;
+import com.concepts78.domicile.engine.handlers.MessageHandler;
+import com.concepts78.domicile.engine.handlers.MessageHandlerBuilder;
+import com.concepts78.domicile.engine.mqtt.MqttService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

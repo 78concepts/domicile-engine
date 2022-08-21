@@ -1,10 +1,10 @@
-package com.concepts78.domicileengine.handlers;
+package com.concepts78.domicile.engine.handlers;
 
-import com.concepts78.domicileengine.model.Device;
-import com.concepts78.domicileengine.mqtt.MqttService;
-import com.concepts78.domicileengine.repository.DevicesRepository;
-import com.concepts78.domicileengine.repository.TemperatureReportsRepository;
-import com.concepts78.domicileengine.services.DevicesService;
+import com.concepts78.domicile.dto.DeviceDto;
+import com.concepts78.domicile.engine.mqtt.MqttService;
+import com.concepts78.domicile.engine.services.DevicesService;
+import com.concepts78.domicile.engine.services.ReportsService;
+import com.concepts78.domicile.engine.services.ZonesService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
@@ -28,7 +28,10 @@ public class DeviceMessageHandler implements MessageHandler {
     DevicesService devicesService;
 
     @Autowired
-    TemperatureReportsRepository temperatureReportsRepository;
+    ReportsService reportsService;
+
+    @Autowired
+    ZonesService zonesService;
 
     private Logger logger = LogManager.getLogger(DeviceMessageHandler.class);
 
@@ -48,7 +51,7 @@ public class DeviceMessageHandler implements MessageHandler {
 
     private void handleReport(String topic, Map report) {
 
-        Device device = devicesService.getDeviceByFriendlyName(topic.replace("zigbee2mqtt/", ""));
+        DeviceDto device = devicesService.getDeviceByFriendlyName(topic.replace("zigbee2mqtt/", ""));
         if(device == null) {
             logger.error(String.format("Device not found for topic: %s", topic));
             return;
@@ -58,33 +61,29 @@ public class DeviceMessageHandler implements MessageHandler {
         Date date = Date.from(zonedDateTime.toInstant());
 
         if(report.get("battery") != null) {
-            devicesService.setBattery(device, date, getDoubleValue(report.get("battery")));
+            devicesService.setBattery(device.getUuid(), date, devicesService.getDoubleValue(report.get("battery")));
+        }
+
+        //TODO Save device state
+        if(devicesService.isReportFromControllableDevice(report)) {
+            logger.info(report.get("brightness"));
+            logger.info(report.get("color"));
+            logger.info(report.get("state"));
         }
 
         if(device.getZoneId() == null) {
-            logger.error("Device does not belong to a zone, ignoring report");
+            logger.error("Device does not belong to a zone, ignoring report: %s", device.getUuid());
             return;
         }
 
         if(report.get("temperature") != null) {
-            temperatureReportsRepository.createReport(device.getId(), device.getZoneId(), date, getDoubleValue(report.get("temperature")));
+            reportsService.createTemperatureReport(device.getUuid(), device.getZoneId(), devicesService.getDoubleValue(report.get("temperature")));
+            zonesService.updateZoneWithTemperatureReport(device.getZoneId(), date, devicesService.getDoubleValue(report.get("temperature")));
         }
 
         //TODO other types of reports
-        System.out.println(report);
-//        {battery=93.5, illuminance=4895, illuminance_lux=3, linkquality=255, motion_sensitivity=medium, occupancy=false, occupancy_timeout=30, temperature=13.75, update={state=idle}, update_available=false}
+//        { illuminance=4895, illuminance_lux=3, linkquality=255, motion_sensitivity=medium, occupancy=false, occupancy_timeout=30, temperature=13.75, update={state=idle}, update_available=false}
+//        {brightness=254, color={x=0.4739, y=0.2104}, color_mode=xy, color_temp=500, linkquality=255, state=OFF}
     }
 
-    private Double getDoubleValue(Object value) {
-
-        Double doubleValue;
-
-        try {
-            doubleValue = (Double)value;
-        } catch(ClassCastException e) {
-            doubleValue = ((Integer)value).doubleValue();
-        }
-
-        return doubleValue;
-    }
 }

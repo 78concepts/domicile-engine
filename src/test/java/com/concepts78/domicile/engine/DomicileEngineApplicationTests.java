@@ -1,4 +1,4 @@
-package com.concepts78.domicileengine;
+package com.concepts78.domicile.engine;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

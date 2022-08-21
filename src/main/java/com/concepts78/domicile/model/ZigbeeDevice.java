@@ -1,4 +1,4 @@
-package com.concepts78.domicileengine.model;
+package com.concepts78.domicile.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

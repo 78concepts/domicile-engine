@@ -1,20 +1,17 @@
-package com.concepts78.domicileengine.model;
+package com.concepts78.domicile.dto;
 
-import java.time.ZonedDateTime;
 import java.util.Date;
-import java.util.Map;
 import java.util.UUID;
 
-public class Device {
+public class DeviceDto {
 
-    private Long id;
     private UUID uuid;
     private String ieeeAddress;
     private Date dateCreated;
     private Date dateModified;
     private String dateCode;
     private String friendlyName;
-    private Long zoneId;
+    private UUID zoneId;
     private String manufacturer;
     private String modelId;
     private String description;
@@ -22,14 +19,6 @@ public class Device {
     private String type;
     private Float battery;
     private boolean active;
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
 
     public UUID getUuid() {
         return uuid;
@@ -72,18 +61,18 @@ public class Device {
     }
 
     public String getFriendlyName() {
-        return this.friendlyName;
+        return friendlyName;
     }
 
     public void setFriendlyName(String friendlyName) {
         this.friendlyName = friendlyName;
     }
 
-    public Long getZoneId() {
+    public UUID getZoneId() {
         return zoneId;
     }
 
-    public void setZoneId(Long zoneId) {
+    public void setZoneId(UUID zoneId) {
         this.zoneId = zoneId;
     }
 

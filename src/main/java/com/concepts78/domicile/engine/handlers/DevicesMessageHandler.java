@@ -1,7 +1,8 @@
-package com.concepts78.domicileengine.handlers;
+package com.concepts78.domicile.engine.handlers;
 
-import com.concepts78.domicileengine.model.ZigbeeDevice;
-import com.concepts78.domicileengine.mqtt.MqttService;
+import com.concepts78.domicile.model.ZigbeeDevice;
+import com.concepts78.domicile.engine.mqtt.MqttService;
+import com.concepts78.domicile.engine.services.DevicesService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -11,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessagingException;
 import org.springframework.stereotype.Component;
-import com.concepts78.domicileengine.services.DevicesService;
 
 import java.util.Arrays;
 import java.util.List;
@@ -36,11 +36,14 @@ public class DevicesMessageHandler implements MessageHandler {
 
             List<ZigbeeDevice> devices = Arrays.stream(mapper.readValue(message.getPayload().toString(), ZigbeeDevice[].class)).toList();
 
+            if(!devicesService.saveDevices(devices)) {
+                logger.error("Unable to save the devices in the databases, will not listen");
+                return;
+            }
+
             this.subscribeToDeviceTopics(devices);
 
-            devicesService.saveDevices(devices);
-
-       } catch (JsonProcessingException e) {
+        } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
     }
@@ -48,17 +51,35 @@ public class DevicesMessageHandler implements MessageHandler {
     private void subscribeToDeviceTopics(List<ZigbeeDevice> devices) {
 
         devices.stream().forEach(x -> {
-            // TODO Lights
-            if (x.getType().equals("EndDevice")) {
-                try {
-                    mqttService.getMqttChannelAdapter().addTopic("zigbee2mqtt/" + x.getFriendlyName(), 1);
-                } catch (MessagingException e) {
-                    if(e.getMessage() == null || !e.getMessage().endsWith("is already subscribed.")) {
-                        throw(e);
+
+            switch(x.getType()) {
+
+                case "EndDevice":
+                    subscribeToDeviceTopic(x.getFriendlyName());
+                    break;
+
+                case "Router":
+                    if(!devicesService.deviceAllowsStateControl(x)) {
+                        break;
                     }
-                    logger.info(e.getMessage());
-                }
+                    subscribeToDeviceTopic(x.getFriendlyName());
+                    break;
+
+                default:
+                    break;
             }
+
         });
+    }
+
+    private void subscribeToDeviceTopic(String friendlyName) {
+        try {
+            mqttService.getMqttChannelAdapter().addTopic("zigbee2mqtt/" + friendlyName, 1);
+        } catch (MessagingException e) {
+            if(e.getMessage() == null || !e.getMessage().endsWith("is already subscribed.")) {
+                throw(e);
+            }
+            logger.info(e.getMessage());
+        }
     }
 }
