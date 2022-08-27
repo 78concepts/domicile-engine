@@ -1,11 +1,8 @@
 package com.concepts78.domicile.engine.services;
 
-import com.concepts78.domicile.dto.CreateTemperatureReportDto;
-import com.concepts78.domicile.dto.DeviceDto;
-import com.concepts78.domicile.dto.TemperatureReportDto;
-import com.concepts78.domicile.model.ZigbeeDevice;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.concepts78.domicile.dto.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
@@ -22,21 +19,66 @@ public class ReportsService {
 
     private Logger logger = LogManager.getLogger(ReportsService.class);
 
-    public TemperatureReportDto createTemperatureReport(UUID deviceId, UUID zoneId, Double value) {
+    private String apiHost = "http://localhost:8081";
+    private String apiPath = "reports";
 
-        String uri = "http://localhost:8081/reports/temperature";
-        ObjectMapper mapper = new ObjectMapper();
+    public TemperatureReportDto createTemperatureReport(UUID deviceId, UUID zoneId, Date date, Double value) {
+
+        String type = "temperature";
+        String uri = String.format("%s/%s/%s", apiHost, apiPath, type);
+
+        CreateTemperatureReportDto dto = new CreateTemperatureReportDto();
+
+        dto.setDeviceId(deviceId);
+        dto.setZoneId(zoneId);
+        dto.setDate(date);
+        dto.setValue(value);
+
+        return (TemperatureReportDto)createReport(uri, deviceId, dto, type, TemperatureReportDto.class);
+    }
+
+    public IlluminanceReportDto createIlluminanceReport(UUID deviceId, UUID zoneId, Date date, Double value, Double valueLux) {
+
+        String type = "illuminance";
+        String uri = String.format("%s/%s/%s", apiHost, apiPath, type);
+
+        CreateIlluminanceReportDto dto = new CreateIlluminanceReportDto();
+
+        dto.setDeviceId(deviceId);
+        dto.setZoneId(zoneId);
+        dto.setDate(date);
+        dto.setValue(value);
+        dto.setValueLux(value);
+
+        return (IlluminanceReportDto)createReport(uri, deviceId, dto, type, IlluminanceReportDto.class);
+    }
+
+    public OccupancyReportDto createOccupancyReport(UUID deviceId, UUID zoneId, Date date, Boolean value) {
+
+        String type = "occupancy";
+        String uri = String.format("%s/%s/%s", apiHost, apiPath, type);
+
+        CreateOccupancyReportDto dto = new CreateOccupancyReportDto();
+
+        dto.setDeviceId(deviceId);
+        dto.setZoneId(zoneId);
+        dto.setDate(date);
+        dto.setValue(value);
+
+        return (OccupancyReportDto) createReport(uri, deviceId, dto , type, OccupancyReportDto.class);
+    }
+
+
+    private Object createReport(String uri, UUID deviceId, Object dto, String type, Class clazz) {
 
         try {
-            CreateTemperatureReportDto dto = new CreateTemperatureReportDto();
 
-            dto.setDeviceId(deviceId);
-            dto.setZoneId(zoneId);
-            dto.setValue(value);
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
-            String payload = new ObjectMapper().writeValueAsString(dto);
+            String payload = mapper.writeValueAsString(dto);
 
-            logger.info(String.format("Create temperature report for device: %s with value: %.2f", deviceId, value));
+            logger.info(String.format("Create %s report for device: %s with payload: %s", type, deviceId, payload));
 
             HttpRequest request = HttpRequest
                     .newBuilder()
@@ -49,9 +91,9 @@ public class ReportsService {
 
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-            return mapper.readValue(response.body(), TemperatureReportDto.class);
+            return mapper.readValue(response.body(), clazz);
 
-        } catch (IOException  | InterruptedException e) {
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
             return null;
         }

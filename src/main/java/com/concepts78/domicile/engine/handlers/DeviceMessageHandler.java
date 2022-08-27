@@ -39,10 +39,10 @@ public class DeviceMessageHandler implements MessageHandler {
 
         try {
             String reportString = message.getPayload().toString();
-            if(reportString == null || reportString.equals("")) {
+            if (reportString == null || reportString.equals("")) {
                 return;
             }
-            handleReport((String)message.getHeaders().get("mqtt_receivedTopic"), new ObjectMapper().readValue(reportString, Map.class));
+            handleReport((String) message.getHeaders().get("mqtt_receivedTopic"), new ObjectMapper().readValue(reportString, Map.class));
 
         } catch (JsonProcessingException e) {
             e.printStackTrace();
@@ -52,7 +52,7 @@ public class DeviceMessageHandler implements MessageHandler {
     private void handleReport(String topic, Map report) {
 
         DeviceDto device = devicesService.getDeviceByFriendlyName(topic.replace("zigbee2mqtt/", ""));
-        if(device == null) {
+        if (device == null) {
             logger.error(String.format("Device not found for topic: %s", topic));
             return;
         }
@@ -60,30 +60,50 @@ public class DeviceMessageHandler implements MessageHandler {
         ZonedDateTime zonedDateTime = ZonedDateTime.now(ZoneId.of("UTC"));
         Date date = Date.from(zonedDateTime.toInstant());
 
-        if(report.get("battery") != null) {
+        if (report.get("battery") != null) {
             devicesService.setBattery(device.getUuid(), date, devicesService.getDoubleValue(report.get("battery")));
         }
 
         //TODO Save device state
-        if(devicesService.isReportFromControllableDevice(report)) {
+        if (devicesService.isReportFromControllableDevice(report)) {
+            logger.info(report);
             logger.info(report.get("brightness"));
             logger.info(report.get("color"));
             logger.info(report.get("state"));
         }
 
-        if(device.getZoneId() == null) {
-            logger.error("Device does not belong to a zone, ignoring report: %s", device.getUuid());
+        if (device.getZoneId() == null) {
+            logger.error(String.format("Device does not belong to a zone, ignoring report: %s", device.getUuid()));
             return;
         }
 
-        if(report.get("temperature") != null) {
-            reportsService.createTemperatureReport(device.getUuid(), device.getZoneId(), devicesService.getDoubleValue(report.get("temperature")));
-            zonesService.updateZoneWithTemperatureReport(device.getZoneId(), date, devicesService.getDoubleValue(report.get("temperature")));
+        if (report.get("temperature") != null && isEnvironmentSensor(report)) {
+            Double value = devicesService.getDoubleValue(report.get("temperature"));
+            reportsService.createTemperatureReport(device.getUuid(), device.getZoneId(), date, value);
+            zonesService.updateZoneWithTemperatureReport(device.getZoneId(), date, value);
         }
 
-        //TODO other types of reports
+        //TODO Humidity / pressure
+
+        if (report.get("illuminance") != null) {
+            Double value = devicesService.getDoubleValue(report.get("illuminance"));
+            Double valueLux = devicesService.getDoubleValue(report.get("illuminance_lux"));
+            reportsService.createIlluminanceReport(device.getUuid(), device.getZoneId(), date, value, valueLux);
+            //TODO update zone
+//            zonesService.updateZoneWithTemperatureReport(device.getZoneId(), date, devicesService.getDoubleValue(report.get("temperature")));
+        }
+
+        if (report.get("occupancy") != null) {
+            Boolean value = devicesService.getBooleanValue(report.get("occupancy"));
+            reportsService.createOccupancyReport(device.getUuid(), device.getZoneId(), date, value);
+            zonesService.updateZoneWithOccupancyReport(device.getZoneId(), date, value);
+        }
+            //TODO other types of reports
 //        { illuminance=4895, illuminance_lux=3, linkquality=255, motion_sensitivity=medium, occupancy=false, occupancy_timeout=30, temperature=13.75, update={state=idle}, update_available=false}
 //        {brightness=254, color={x=0.4739, y=0.2104}, color_mode=xy, color_temp=500, linkquality=255, state=OFF}
     }
 
+    private boolean isEnvironmentSensor(Map report) {
+        return report.get("temperature") != null && report.get("illuminance") == null;
+    }
 }

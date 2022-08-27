@@ -37,7 +37,7 @@ public class DevicesMessageHandler implements MessageHandler {
             List<ZigbeeDevice> devices = Arrays.stream(mapper.readValue(message.getPayload().toString(), ZigbeeDevice[].class)).toList();
 
             if(!devicesService.saveDevices(devices)) {
-                logger.error("Unable to save the devices in the databases, will not listen");
+                logger.error("Unable to save the devices in the database, will not listen");
                 return;
             }
 

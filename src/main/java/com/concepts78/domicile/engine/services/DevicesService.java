@@ -164,4 +164,12 @@ public class DevicesService {
             }
         }
     }
+
+    public Boolean getBooleanValue(Object value) {
+        try {
+            return (Boolean)value;
+        } catch(ClassCastException e) {
+            return Boolean.valueOf((String)value);
+        }
+    }
 }

@@ -91,7 +91,7 @@ class DevicesServiceTests {
         Assertions.assertEquals(devicesService.isReportFromControllableDevice(report), false);
     }
 
-    @Test void whenStateExists_thenReportFromCntrollableDevice() {
+    @Test void whenStateExists_thenReportFromControllableDevice() {
         Map report = Map.of("state", "OFF");;
         Assertions.assertEquals(devicesService.isReportFromControllableDevice(report), true);
     }

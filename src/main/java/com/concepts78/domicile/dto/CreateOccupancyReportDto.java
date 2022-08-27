@@ -3,12 +3,12 @@ package com.concepts78.domicile.dto;
 import java.util.Date;
 import java.util.UUID;
 
-public class CreateTemperatureReportDto {
+public class CreateOccupancyReportDto {
 
     private UUID deviceId;
     private UUID zoneId;
     private Date date;
-    private Double value;
+    private Boolean value;
 
     public UUID getDeviceId() {
         return deviceId;
@@ -34,11 +34,12 @@ public class CreateTemperatureReportDto {
         this.date = date;
     }
 
-    public Double getValue() {
+    public Boolean getValue() {
         return value;
     }
 
-    public void setValue(Double value) {
+    public void setValue(Boolean value) {
         this.value = value;
     }
 }
+
