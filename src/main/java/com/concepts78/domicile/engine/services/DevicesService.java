@@ -169,7 +169,15 @@ public class DevicesService {
         try {
             return (Boolean)value;
         } catch(ClassCastException e) {
-            return Boolean.valueOf((String)value);
+            try {
+                return ((Double) value).doubleValue() > 0;
+            } catch(ClassCastException ee) {
+                try {
+                    return ((Integer) value).intValue() > 0;
+                } catch(ClassCastException eee) {
+                    return Boolean.valueOf((String) value);
+                }
+            }
         }
     }
 }

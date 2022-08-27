@@ -37,6 +37,9 @@ public class DeviceMessageHandler implements MessageHandler {
 
     public void handle(Message message) {
 
+        //TODO
+//        System.out.println(message.getHeaders().get("mqtt_duplicate"));
+
         try {
             String reportString = message.getPayload().toString();
             if (reportString == null || reportString.equals("")) {

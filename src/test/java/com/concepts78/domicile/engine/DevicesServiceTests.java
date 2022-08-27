@@ -95,4 +95,42 @@ class DevicesServiceTests {
         Map report = Map.of("state", "OFF");;
         Assertions.assertEquals(devicesService.isReportFromControllableDevice(report), true);
     }
+
+    @Test void WhenTrueStringValue_thenTrueReturned() {
+        Assertions.assertEquals(devicesService.getBooleanValue("true"), true);
+    }
+
+    @Test void WhenFalseStringValue_thenFalseReturned() {
+        Assertions.assertEquals(devicesService.getBooleanValue("false"), false);
+    }
+
+    @Test void WhenInvalidStringValue_thenFalseReturned() {
+        Assertions.assertEquals(devicesService.getBooleanValue("This is not a bool"), false);
+    }
+
+    @Test void WhenTrueBooleanValue_thenTrueReturned() {
+        Assertions.assertEquals(devicesService.getBooleanValue(true), true);
+    }
+
+    @Test void WhenFalseBooleanValue_thenFalseReturned() {
+        Assertions.assertEquals(devicesService.getBooleanValue(false), false);
+    }
+
+    @Test void WhenZeroDoubleValue_thenFalseReturned() {
+        Assertions.assertEquals(devicesService.getBooleanValue(Double.valueOf(0)), false);
+    }
+
+    @Test void WhenNonZeroDoubleValue_thenTrueReturned() {
+        Assertions.assertEquals(devicesService.getBooleanValue(Double.valueOf(0.5)), true);
+    }
+
+    @Test void WhenZeroIntegerValue_thenFalseReturned() {
+        Assertions.assertEquals(devicesService.getBooleanValue(Integer.valueOf(0)), false);
+
+    }
+
+    @Test void WhenNonZerIntegerValue_thenTrueReturned() {
+        Assertions.assertEquals(devicesService.getBooleanValue(Integer.valueOf(1)), true);
+    }
+
 }
